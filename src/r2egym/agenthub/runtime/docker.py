@@ -80,6 +80,7 @@ class DockerRuntime(ExecutionEnvironment):
     - collect files
     - list files excluding test files etc
     """
+    loopback_container = True
 
     def __init__(
         self,
@@ -103,8 +104,9 @@ class DockerRuntime(ExecutionEnvironment):
             ds_image = self.ds["docker_image"]
         elif "image_name" in self.ds:
             ds_image = self.ds["image_name"]
-        else:
+        elif self.loopback_container == False:
             raise ValueError(f"No docker image found in ds: {self.ds}")
+    
         self.docker_image = ds_image if not docker_image else docker_image
         self.swebench_verified = "swebench" in self.docker_image
         self.swesmith = "swesmith" in self.docker_image
@@ -348,14 +350,12 @@ class DockerRuntime(ExecutionEnvironment):
                 self.logger.error(f"Failed to check pod status after watch error: {status_error}")
                 raise RuntimeError(f"Failed to verify pod status: {status_error}")
 
-    loopback_container = True
-
     def start_container(
         self, docker_image: str, command: str, ctr_name: str, **docker_kwargs
     ):
         # Start or reuse a container
         try:
-            if loopback_container:
+            if self.loopback_container:
                 containerId = socket.gethostname()
                 self.logger.error(f"Container ID: {containerId}")
                 self.container = self.client.containers.get(containerId).client
