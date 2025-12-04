@@ -100,70 +100,77 @@ class DockerRuntime(ExecutionEnvironment):
         self.ds = ds
         self.backend = backend
         ds_image = None
-        if "docker_image" in self.ds:
-            ds_image = self.ds["docker_image"]
-        elif "image_name" in self.ds:
-            ds_image = self.ds["image_name"]
-        elif self.loopback_container == False:
-            raise ValueError(f"No docker image found in ds: {self.ds}")
-    
-        self.docker_image = ds_image if not docker_image else docker_image
-        self.swebench_verified = "swebench" in self.docker_image
-        self.swesmith = "swesmith" in self.docker_image
-        if self.swesmith:
-            image_name = self.ds['image_name'].replace('__', '_1776_')
-            self.swebench_verified = False
-            self.docker_image = f'jyangballin/{image_name}:latest'
-        
-        if self.swebench_verified:
-            # also create a test spec for swebench verified dockers (useful for grading)
-            self.test_spec = make_test_spec(self.ds)
 
-        # set runtime params
-        self.repo_path = repo_path
-        self.alt_path = alt_path
-        self.command = command
-        self.repo_name = (
-            self.ds["repo"] if self.swebench_verified or self.swesmith else self.ds["repo_name"]
-        )
-        if not self.swesmith:
-            self.commit_json = (
-                self.ds["parsed_commit"]
-                if self.swebench_verified
-                else self.ds["parsed_commit_content"]
-            )
-            self.commit = ParsedCommit(**json.loads(self.commit_json))
-        self.docker_kwargs = docker_kwargs
-        if logger is None:
-            if self.backend == "docker":
-                logger_name = "DockerRuntime"
-            elif self.backend == "kubernetes":
-                logger_name = "KubernetesRuntime"
-            else:
-                raise ValueError(f"Invalid backend: {self.backend}")
-            self.logger = get_logger(logger_name)  # Pass the module name for clarity
+        if(self.loopback_container == True) :
+            containerId = socket.gethostname()
+            self.logger.error(f"Container ID: {containerId}")
+            self.container = self.client.containers.get(containerId).client
+            self.logger.error(f"CONNECTED TO SELF")
         else:
-            self.logger = logger
+            if "docker_image" in self.ds:
+                ds_image = self.ds["docker_image"]
+            elif "image_name" in self.ds:
+                ds_image = self.ds["image_name"]
+            else:
+                raise ValueError(f"No docker image found in ds: {self.ds}")
+        
+            self.docker_image = ds_image if not docker_image else docker_image
+            self.swebench_verified = "swebench" in self.docker_image
+            self.swesmith = "swesmith" in self.docker_image
+            if self.swesmith:
+                image_name = self.ds['image_name'].replace('__', '_1776_')
+                self.swebench_verified = False
+                self.docker_image = f'jyangballin/{image_name}:latest'
+            
+            if self.swebench_verified:
+                # also create a test spec for swebench verified dockers (useful for grading)
+                self.test_spec = make_test_spec(self.ds)
 
-        if self.backend == "docker":
-            self.client = docker.from_env(timeout=120)
-        elif self.backend == "kubernetes":
-            # Try in-cluster config first, fallback to kubeconfig
-            try:
-                config.load_incluster_config()
-            except Exception:
-                config.load_kube_config()
-            self.client = client.CoreV1Api()
+            # set runtime params
+            self.repo_path = repo_path
+            self.alt_path = alt_path
+            self.command = command
+            self.repo_name = (
+                self.ds["repo"] if self.swebench_verified or self.swesmith else self.ds["repo_name"]
+            )
+            if not self.swesmith:
+                self.commit_json = (
+                    self.ds["parsed_commit"]
+                    if self.swebench_verified
+                    else self.ds["parsed_commit_content"]
+                )
+                self.commit = ParsedCommit(**json.loads(self.commit_json))
+            self.docker_kwargs = docker_kwargs
+            if logger is None:
+                if self.backend == "docker":
+                    logger_name = "DockerRuntime"
+                elif self.backend == "kubernetes":
+                    logger_name = "KubernetesRuntime"
+                else:
+                    raise ValueError(f"Invalid backend: {self.backend}")
+                self.logger = get_logger(logger_name)  # Pass the module name for clarity
+            else:
+                self.logger = logger
 
-        # Start the container
-        self.container = None
-        self.container_name = self._get_container_name(self.docker_image)
-        if self.backend == "kubernetes":
-            # Generate a random UUID and truncate to 30 characters
-            self.container_name = str(uuid.uuid4())
-        self.start_container(
-            self.docker_image, command, self.container_name, **docker_kwargs
-        )
+            if self.backend == "docker":
+                self.client = docker.from_env(timeout=120)
+            elif self.backend == "kubernetes":
+                # Try in-cluster config first, fallback to kubeconfig
+                try:
+                    config.load_incluster_config()
+                except Exception:
+                    config.load_kube_config()
+                self.client = client.CoreV1Api()
+
+            # Start the container
+            self.container = None
+            self.container_name = self._get_container_name(self.docker_image)
+            if self.backend == "kubernetes":
+                # Generate a random UUID and truncate to 30 characters
+                self.container_name = str(uuid.uuid4())
+            self.start_container(
+                self.docker_image, command, self.container_name, **docker_kwargs
+            )
 
         # Initialize the environment
         self.setup_env()
