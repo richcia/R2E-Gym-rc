@@ -100,6 +100,17 @@ class DockerRuntime(ExecutionEnvironment):
         self.ds = ds
         self.backend = backend
         ds_image = None
+        
+        if logger is None:
+            if self.backend == "docker":
+                logger_name = "DockerRuntime"
+            elif self.backend == "kubernetes":
+                logger_name = "KubernetesRuntime"
+            else:
+                raise ValueError(f"Invalid backend: {self.backend}")
+            self.logger = get_logger(logger_name)  # Pass the module name for clarity
+        else:
+            self.logger = logger
 
         if(self.loopback_container == True) :
             containerId = socket.gethostname()
@@ -141,16 +152,7 @@ class DockerRuntime(ExecutionEnvironment):
                 )
                 self.commit = ParsedCommit(**json.loads(self.commit_json))
             self.docker_kwargs = docker_kwargs
-            if logger is None:
-                if self.backend == "docker":
-                    logger_name = "DockerRuntime"
-                elif self.backend == "kubernetes":
-                    logger_name = "KubernetesRuntime"
-                else:
-                    raise ValueError(f"Invalid backend: {self.backend}")
-                self.logger = get_logger(logger_name)  # Pass the module name for clarity
-            else:
-                self.logger = logger
+
 
             if self.backend == "docker":
                 self.client = docker.from_env(timeout=120)
