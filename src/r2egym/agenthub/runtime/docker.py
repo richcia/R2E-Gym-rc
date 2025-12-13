@@ -352,6 +352,10 @@ class DockerRuntime(ExecutionEnvironment):
     ):
         # Start or reuse a container
         try:
+            print("Docker was - ", docker_image)
+
+            docker_image = "docker.io/slimshetty/swebench-verified:sweb.eval.x86_64.matplotlib__matplotlib-20488"
+
             if self.backend == "docker":
                 containers = self.client.containers.list(
                     all=True, filters={"name": ctr_name}
