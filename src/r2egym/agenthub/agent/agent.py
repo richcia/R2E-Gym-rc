@@ -183,6 +183,8 @@ class Agent:
         using_local = "openai/" in self.llm_name or "hosted" in self.llm_name
         if using_local:
             litellm.api_key = None
+        else:
+            litellm.api_key = os.getenv("API_KEY")
 
         messages_ = copy.deepcopy(messages)
         total_tokens = self._count_tokens(messages_)
