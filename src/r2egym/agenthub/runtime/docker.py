@@ -368,6 +368,7 @@ class DockerRuntime(ExecutionEnvironment):
                 if containers:
                     self.container = containers[0]
                     if self.container.status != "running":
+                        print("Start image")
                         self.container.start()
                 else:
                     print("Run image")
