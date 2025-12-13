@@ -354,7 +354,9 @@ class DockerRuntime(ExecutionEnvironment):
         try:
             print("Docker was - ", docker_image)
 
-            docker_image = "docker.io/slimshetty/swebench-verified:sweb.eval.x86_64.matplotlib__matplotlib-20488"
+            docker_image = "docker.io/" + docker_image
+
+            print("Docker is - ", docker_image)
 
             if self.backend == "docker":
                 containers = self.client.containers.list(
