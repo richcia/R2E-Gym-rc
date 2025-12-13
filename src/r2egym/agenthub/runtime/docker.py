@@ -354,7 +354,7 @@ class DockerRuntime(ExecutionEnvironment):
         try:
             print("Docker was - ", docker_image)
 
-  #          docker_image = "docker.io/" + docker_image
+            docker_image = "docker.io/" + docker_image
 
             print("Docker is - ", docker_image)
 
