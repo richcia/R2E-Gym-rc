@@ -181,10 +181,8 @@ class Agent:
         start_time = time.time()
         # check if using locally hosted models
         using_local = "openai/" in self.llm_name or "hosted" in self.llm_name
-#        if using_local:
-#            litellm.api_key = None
-#        else:
-        litellm.api_key = os.getenv("OPENAI_API_KEY")
+        if using_local:
+            litellm.api_key = None
 
         messages_ = copy.deepcopy(messages)
         total_tokens = self._count_tokens(messages_)
@@ -208,7 +206,9 @@ class Agent:
                     tools=tools,
                     messages=messages_,
                     timeout=self.llm_timeout,
-                    api_base=self.llm_base_url,
+                    api_key=os.getenv("AML_API_KEY"),
+                    api_base=os.getenv("AML_BASE_URL"),
+#                    api_base=self.llm_base_url,
                     # max_tokens=3000,
                     **kwargs,
                 )
