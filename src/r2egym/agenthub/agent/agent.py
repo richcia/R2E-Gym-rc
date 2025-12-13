@@ -184,7 +184,7 @@ class Agent:
 #        if using_local:
 #            litellm.api_key = None
 #        else:
-        litellm.api_key = os.getenv("API_KEY")
+        litellm.api_key = os.getenv("OPENAI_API_KEY")
 
         messages_ = copy.deepcopy(messages)
         total_tokens = self._count_tokens(messages_)
