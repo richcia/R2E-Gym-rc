@@ -354,7 +354,7 @@ class DockerRuntime(ExecutionEnvironment):
         try:
             print("Docker was - ", docker_image)
 
-            docker_image = "docker.io/" + docker_image
+  #          docker_image = "docker.io/" + docker_image
 
             print("Docker is - ", docker_image)
 
@@ -362,11 +362,15 @@ class DockerRuntime(ExecutionEnvironment):
                 containers = self.client.containers.list(
                     all=True, filters={"name": ctr_name}
                 )
+                
+                print("List containers - ", containers)
+                
                 if containers:
                     self.container = containers[0]
                     if self.container.status != "running":
                         self.container.start()
                 else:
+                    print("Run image")
                     self.container = self.client.containers.run(
                         docker_image,
                         command,
