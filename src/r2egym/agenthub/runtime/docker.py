@@ -371,7 +371,7 @@ class DockerRuntime(ExecutionEnvironment):
                         print("Start image")
                         self.container.start()
                 else:
-                    print("Run image")
+                    print("Run image", docker_image, command, ctr_name, docker_kwargs)
                     self.container = self.client.containers.run(
                         docker_image,
                         command,
